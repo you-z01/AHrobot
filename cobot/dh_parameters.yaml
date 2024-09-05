@@ -1,0 +1,42 @@
+
+# D-H 参数
+# 格式:   [a, alpha, d, theta]
+# a:      前一关节到后一关节的长度
+# alpha:  绕前一关节 z 轴的旋转角度（弧度），π/2 表示绕 z 轴旋转 90 度
+# d:      前一关节到后一关节的偏移
+# theta:  绕后一关节 x 轴的旋转角度（弧度）θ
+# offset: theta 的初始偏移角度（弧度）
+
+
+
+dh_parameters:
+  - a: 0
+    alpha: 1.5708  # pi/2
+    d: 0.13122
+    theta: 0
+    offset: 0
+  - a: -0.1104
+    alpha: 0
+    d: 0
+    theta: 0
+    offset: -1.5708  # -pi/2
+  - a: -0.096
+    alpha: 0
+    d: 0
+    theta: 0
+    offset: 0
+  - a: 0
+    alpha: 1.5708  # pi/2
+    d: 0.0634
+    theta: 0
+    offset: -1.5708  # -pi/2
+  - a: 0
+    alpha: -1.5708  # -pi/2
+    d: 0.07505
+    theta: 0
+    offset: 1.5708  # pi/2
+  - a: 0
+    alpha: 0
+    d: 0.0456
+    theta: 0
+    offset: 0
