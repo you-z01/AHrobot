@@ -10,7 +10,6 @@ from utils.datasets import letterbox
 from utils.general import check_img_size, non_max_suppression, scale_coords
 from utils.torch_utils import select_device, time_sync
 import yaml
-
 class RealSenseCamera:
     def __init__(self):
         '''初始化RealSense相机'''

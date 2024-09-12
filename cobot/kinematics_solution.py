@@ -85,6 +85,7 @@ class KinematicsSolution:
 
         return coords
 
+
     def myRPY2R_robot(self, x, y, z):
         """
         根据欧拉角构建旋转矩阵(ZYX 顺序）
@@ -100,6 +101,7 @@ class KinematicsSolution:
         Rz = np.array([[cos(z), -sin(z), 0], [sin(z), cos(z), 0], [0, 0, 1]])
         R = Rz @ Ry @ Rx
         return R
+
 
     def pose_robot(self, x, y, z, Tx, Ty, Tz):
         """
@@ -120,6 +122,7 @@ class KinematicsSolution:
         RT1 = np.column_stack([R, t])  # 列合并
         RT1 = np.row_stack((RT1, np.array([0, 0, 0, 1])))
         return RT1
+
 
     def inverse_kinematics(self, end_effector_pose):
         """
@@ -151,7 +154,8 @@ class KinematicsSolution:
         # 求解theta1, 有两个解
         M = d6*Ay - Py
         N = d6*Ax - Px
-        # 返回弧度值
+
+        # 返回弧度值  
         theta_1 = atan2(M, N) - atan2(d4, sqrt(M*M + N*N - d4*d4))
         theta_1_2 = atan2(M, N) - atan2(d4, -sqrt(M*M + N*N - d4*d4))
 
@@ -269,13 +273,68 @@ class KinematicsSolution:
         return valid_theta_angle
 
 
+    def _dh_transform(self, a, alpha, d, theta):
+        """
+        计算 D-H 变换矩阵
+
+        输入参数:
+        a (float): 连杆长度
+        alpha (float): 连杆扭角
+        d (float): 连杆偏移
+        theta (float): 关节角度
+
+        返回:
+        np.ndarray: 4x4 D-H 变换矩阵
+        """
+        return np.array([
+            [np.cos(theta), -np.sin(theta) * np.cos(alpha), np.sin(theta) * np.sin(alpha), a * np.cos(theta)],
+            [np.sin(theta), np.cos(theta) * np.cos(alpha), -np.cos(theta) * np.sin(alpha), a * np.sin(theta)],
+            [0, np.sin(alpha), np.cos(alpha), d],
+            [0, 0, 0, 1]
+        ], dtype=np.float16)
+
+    def compute_end_effector_transform(self, joint_angles):
+        """
+        计算末端执行器相对于基坐标系的变换矩阵
+
+        输入参数:
+        joint_angles (list or np.ndarray): 关节角度（单位：弧度）
+
+        返回:
+        np.ndarray: 4x4 末端执行器相对于基坐标系的变换矩阵
+        """
+        assert len(joint_angles) == len(self.dh_parameters), "关节角度的数量应与 D-H 参数的数量匹配"
+        
+        T = np.eye(4, dtype=np.float16)
+        for i in range(len(joint_angles)):
+            a, alpha, d, theta, offset = self.dh_parameters[i]
+            theta += joint_angles[i]  # 关节角度
+            T_i = self._dh_transform(a, alpha, d, theta)
+            T = T @ T_i
+        
+        return T
+
+    def get_end_effector_to_base_transform(self, joint_angles):
+        """
+        获取末端执行器到基坐标系的变换矩阵
+
+        输入参数:
+        joint_angles (list or np.ndarray): 关节角度（单位：弧度）
+
+        返回:
+        np.ndarray: 4x4 末端执行器到基坐标系的变换矩阵
+        """
+        # 计算末端执行器相对于基坐标系的变换矩阵
+        T_base_to_end_effector = self.compute_end_effector_transform(joint_angles)
+        return T_base_to_end_effector
+
 if __name__ == "__main__":
 
     robot = KinematicsSolution('cobot/dh_parameters.yaml')
 
     joint_angles = [-132.89, -29.35, 4.92, -61.52, -1.23, 45.96]  # 实际关节角度
-    robot_real_pose = [33.7, 215.2, 158.6, -123.35, 0.75, 0.21]   # 位姿
-
+    # robot_real_pose = [-1.28, -20.35, 133.44, -163.09, 6.57, 0.7]   # 位姿
+    robot_real_pose = [95.87, 182.99, 106.05, -171.06, -3.58, 2.69]   # 位姿
     inverse_solution_results = robot.inverse_kinematics(robot_real_pose)
     if inverse_solution_results:
         print("有效的关节角度解:")
@@ -286,6 +345,7 @@ if __name__ == "__main__":
         # 验证正运动学结果
         positive_solution_pose = robot.forward_kinematics(inverse_solution_results[0])
         print("对应的正运动学位姿:\n", np.round(positive_solution_pose, 2).tolist())  # 保留两位小数并转换为列表
+
     else:
         print("没有找到有效的解")
 

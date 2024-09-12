@@ -118,8 +118,8 @@ def get_aruco_coord( rgb, depth, intr_matrix, intr_coeffs):
 if __name__ == "__main__":
 
     # º∆À„ ÷—€æÿ’Û
-    quaternion = [0.9965499601346351, -0.0008307735589123463, 0.011060035444691363, -0.0822506072130334]
-    translation = [-0.0403225, -0.0298586, -0.022827]
+    quaternion = [0.999574831685977, 0.016861922075053517, -0.0012176168900470685, 0.023756027719189287]
+    translation = [-0.0291947, -0.0481932, 0.0133379]
     hand_eye_matrix = calculate_hand_eye_matrix(quaternion, translation)
     while 1:
 

@@ -1,50 +1,59 @@
-
-
-# 眼在手上标定方式
-# 将相机坐标系下所获得的目标物体(x,y,z)转换成机械臂基坐标系下的（x,y,z）
 import numpy as np
- 
-# 将相机坐标系下的物体坐标转移至机械臂末端坐标系下
-def transform_camera_to_armend(camera_xyz, hand_eye_matrix):
-    # Append 1 to the camera coordinates to make them homogeneous
-    camera_xyz_homogeneous = np.append(camera_xyz, 1)
- 
-    # Transform camera coordinates to arm coordinates using hand-eye matrix
-    arm_xyz_homogeneous = np.dot(hand_eye_matrix, camera_xyz_homogeneous)
- 
-    # Remove the homogeneous component and return arm coordinates
-    arm_xyz = arm_xyz_homogeneous[:3]
-    return arm_xyz
- 
-# 将机械臂末端坐标系下的物体坐标转移至机械臂基坐标系下
-def transform_point_to_base(point, T_end_effector_to_base):
-    # 将点从末端坐标系转移到基座标系
-    point_homogeneous = np.append(point, 1)  # 转换为齐次坐标
-    point_base_homogeneous = T_end_effector_to_base @ point_homogeneous
-    point_base = point_base_homogeneous[:3] / point_base_homogeneous[3]  # 转换回非齐次坐标
- 
-    return point_base
- 
-# 深度相机坐标系到机械臂末端坐标系的位姿转换矩阵
-hand_eye_matrix = np.array([[ 7.03178404e-01, -7.10991045e-01, -5.64506277e-03,  2.17625306e-02],
- [ 7.11002245e-01,  7.03189737e-01, -3.22089035e-05, -6.90680181e-02],
- [ 3.99245045e-03, -3.99100370e-03,  9.99984066e-01,  4.01377097e-02],
- [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00]])
- 
-# 机械臂末端的坐标系到机械臂基坐标系下的位姿转换矩阵
-T_end_effector_to_base = np.array([[0.665037, -0.746393, 0.0249527, 0.442627],
-                                   [-0.746141, -0.662656, 0.0645062, -0.242624],
-                                   [-0.0316119, -0.0615173, -0.997605, 0.731147],
-                                   [0, 0, 0, 1]])
- 
-# 相机坐标系下某点三维坐标
-# camera_xyz = np.array([0.0858, 0.00472, 0.47100])
-camera_xyz = np.array([6.482825, -4.570933, 304.000000])
-# 将点转移至机械臂末端坐标系下
-point_end_effector = transform_camera_to_armend(camera_xyz, hand_eye_matrix)
- 
-# 将点转移到基座标系下
-point_base = transform_point_to_base(point_end_effector, T_end_effector_to_base)
- 
-# 输出点在机械臂基坐标系下的坐标
-print("Point in Base Coordinates:", point_base)
+import transforms3d
+
+
+class HandEyeTransformation:
+    def __init__(self, translation, quaternion):
+        """
+        初始化手眼转换类，计算手眼矩阵
+        
+        参数:
+        translation: 手眼标定的平移向量 [x, y, z] (m)
+        quaternion: 手眼标定的四元数 [w, x, y, z]
+        """
+        # 将平移向量从米转换为毫米
+        self.translation = np.array(translation) * 1000
+
+        # 四元数转换为旋转矩阵
+        self.rotation_matrix = transforms3d.quaternions.quat2mat(quaternion)
+
+        # 构建 4x4 齐次变换矩阵 T_camera_to_end_effector
+        self.T_camera_to_end_effector = np.eye(4)
+        self.T_camera_to_end_effector[:3, :3] = self.rotation_matrix
+        self.T_camera_to_end_effector[:3, 3] = self.translation
+        print("手眼矩阵: \n", self.T_camera_to_end_effector)
+        print("=====================================")
+
+    def camera_to_end(self, camera_xyz):
+        """
+        将相机坐标系下的物体位置(mm)转换为机械臂末端执行器坐标系下的位置(mm)
+        
+        参数:
+        x_camera, y_camera, z_camera: 物体在相机坐标系下的3D位置 (mm)
+
+        返回:
+        物体在末端执行器坐标系下的3D位置 (mm 两位小数)
+        """
+        # 目标物体在相机坐标系下的位置 (齐次坐标)
+        P_camera = np.append(camera_xyz, 1)
+        
+        # 使用手眼矩阵将相机坐标系下的目标物体坐标转换为末端执行器坐标系下的坐标
+        P_end_effector = np.dot(self.T_camera_to_end_effector, P_camera)
+
+        # 返回末端执行器坐标系下的目标物体位置，保留两位小数
+        return np.round(P_end_effector[:3], 2)
+    
+if __name__ == "__main__":
+    
+
+    # 平移向量 x, y, z (米)
+    translation = [-0.0435494, -0.0569944, 0.0108573]
+    # 四元数 w, x, y, z
+    quaternion = [0.9992468756961643, 0.018581772994452937, 0.028317631977733293, -0.018934382562174293]
+
+    hand_eye_calib = HandEyeTransformation(translation, quaternion)
+    camera_xyz = [23.7, -43.83, 242.0]
+    # 调用类方法进行坐标转换
+    end_effector_position = hand_eye_calib.camera_to_end(camera_xyz)
+
+    print("目标物体在末端执行器坐标系下的坐标 (单位: 毫米): ", end_effector_position)
