@@ -334,7 +334,7 @@ if __name__ == "__main__":
 
     joint_angles = [-132.89, -29.35, 4.92, -61.52, -1.23, 45.96]  # 实际关节角度
     # robot_real_pose = [-1.28, -20.35, 133.44, -163.09, 6.57, 0.7]   # 位姿
-    robot_real_pose = [95.87, 182.99, 106.05, -171.06, -3.58, 2.69]   # 位姿
+    robot_real_pose = [-8.51, 48.63, 188.0, -91.4, 0.25, -89.74]   # 位姿
     inverse_solution_results = robot.inverse_kinematics(robot_real_pose)
     if inverse_solution_results:
         print("有效的关节角度解:")
