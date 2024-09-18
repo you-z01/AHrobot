@@ -59,12 +59,12 @@ if __name__ == '__main__':
     # 初始化机械臂运动学解类
     kinematics_solution = KinematicsSolution('cobot/dh_parameters.yaml')
 
-    camera_xyz = []       # 相机坐标系下的xyz 一维列表
-    camera_xyz_mm = []    # 相机坐标系下的xyz(mm) 一维列表
-    target_xyz = []       # 要抓取的目标坐标
-    target_rotation = []  # 要抓取的目标旋转
-    target_xyzRxyz = []   # 相机坐标系下的xyzRxyz 一维列表
-    target_robot = []     # 机械臂坐标系下的目标坐标
+    camera_xyz = []         # 相机坐标系下的xyz 一维列表
+    camera_xyz_mm = []      # 相机坐标系下的xyz(mm) 一维列表
+    target_xyz = []         # 要抓取的目标坐标
+    target_rotation = []    # 要抓取的目标旋转
+    target_xyzRxyz = []     # 相机坐标系下的xyzRxyz 一维列表
+    target_robot = []       # 机械臂坐标系下的目标坐标
     target_rotation = [-87.63, -0.71, 5.77] # 末端固定位姿 rx ry rz
     try:
         while True:
@@ -100,10 +100,20 @@ if __name__ == '__main__':
                 print(camera_xyz)
                 print(camera_xyz_mm)
                 
+
+            elif key == ord('5'):
+                client.send_message("[6, 1, 9]")
+                recive_data = client.receive_message()  # 接收到的数据
             elif key == ord('6'):
-                client.send_message("[0, 89.92, -59.97, -12.0, 74.3, 5.9, -0.47, 9]")
+                client.send_message("[6, 2, 9]")
+                recive_data = client.receive_message()  # 接收到的数据
             elif key == ord('7'):
-                client.send_message("[0, 0, 0, 0, 0, 0, 0, 9]")
+                client.send_message("[6, 3, 9]")
+                recive_data = client.receive_message()  # 接收到的数据
+            elif key == ord('8'):
+                client.send_message("[6, 10, 89.92, -59.97, -12.0, 74.3, 5.9, -0.47, 9]")
+            elif key == ord('9'):
+                client.send_message("[6, 10, 0, 0, 0, 0, 0, 0, 9]")
 
             elif key == ord('2'):
                 client.send_message(str(target_xyzRxyz)) # 发送坐标信息到服务器
@@ -127,7 +137,6 @@ if __name__ == '__main__':
 
                 # 将米转换为毫米，并保留两位小数
                 xyz_data_mm = [round(coord * 1000, 2) for coord in xyz_data_m]
-
                 # 合并为新的列表
                 target_list = xyz_data_mm + target_rotation
                 print(f"转换后的坐标和旋转列表为：{target_xyzRxyz}")
