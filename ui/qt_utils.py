@@ -68,40 +68,6 @@ class TCPClient:
             return "客户端尚未连接"
 
 
-# def parse_data(data_str):
-#     """
-#     通用数据解析函数, 能够处理JSON、列表格式的数据。
-    
-#     参数:
-#     data_str (str): 待解析的数据字符串。
-    
-#     返回:
-#     list: 解析后的数据列表。如果解析失败, 返回None。
-#     """
-#     # 去除前后的空白符或无效字符
-#     data_str = data_str.strip()
-    
-#     # 如果数据字符串为空，返回None
-#     if not data_str:
-#         print("收到的数据为空")
-#         return "收到的数据为空"
-
-#     # 尝试解析为JSON格式
-#     try:
-#         return json.loads(data_str)
-#     except json.JSONDecodeError:
-#         pass  # 如果失败，继续尝试其他方式
-
-#     # 尝试解析为Python列表
-#     try:
-#         return ast.literal_eval(data_str)
-#     except (ValueError, SyntaxError):
-#         pass  # 如果失败，继续
-
-#     # 如果所有尝试都失败，返回None并提示错误
-#     print(f"无法解析数据：{data_str}")
-#     return f"无法解析数据：{data_str}"
-
 def parse_data(data_str):
     """
     从类似于 '收到数据: [x, y, z, rx, ry, rz, ...]' 的字符串中解析出数值列表。

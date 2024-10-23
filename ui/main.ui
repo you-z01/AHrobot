@@ -13,13 +13,13 @@
   <property name="windowTitle">
    <string>系统</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>20</x>
      <y>10</y>
      <width>1004</width>
-     <height>871</height>
+     <height>873</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -139,7 +139,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_6">
+             <widget class="QPushButton" name="pushButton_9">
               <property name="font">
                <font>
                 <family>宋体</family>
@@ -160,7 +160,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QPushButton" name="pushButton_7">
+         <widget class="QPushButton" name="pushButton">
           <property name="font">
            <font>
             <family>宋体</family>
@@ -173,19 +173,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
-          <property name="font">
-           <font>
-            <family>宋体</family>
-            <pointsize>15</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>退出程序</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QPushButton" name="pushButton_2">
           <property name="font">
            <font>
@@ -194,7 +181,7 @@
            </font>
           </property>
           <property name="text">
-           <string>发送数据并计算逆运动学解</string>
+           <string>关闭系统</string>
           </property>
          </widget>
         </item>
@@ -238,7 +225,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_9">
+         <widget class="QPushButton" name="pushButton_6">
           <property name="font">
            <font>
             <family>宋体</family>
@@ -247,6 +234,45 @@
           </property>
           <property name="text">
            <string>获取变换并计算逆运动学解</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_7">
+          <property name="font">
+           <font>
+            <family>宋体</family>
+            <pointsize>15</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>到起始位姿</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_10">
+          <property name="font">
+           <font>
+            <family>宋体</family>
+            <pointsize>15</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>自动抓取</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_11">
+          <property name="font">
+           <font>
+            <family>宋体</family>
+            <pointsize>15</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>重连socket服务</string>
           </property>
          </widget>
         </item>

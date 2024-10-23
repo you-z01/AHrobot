@@ -20,9 +20,9 @@ class WorkerThread(QThread):
         realsense_camera = RealSenseCamera()
 
         self.log_signal.emit("[INFO] 完成realsense相机启动")
-        self.log_signal.emit("[INFO] 开始加载YoloV5模型")
+        self.log_signal.emit("[INFO] 开始加载YOLO-VDS模型")
         yolo_model = YoloV5(yolov5_yaml_path='config/strawberry_maturity.yaml')
-        self.log_signal.emit("[INFO] 完成YoloV5模型加载")
+        self.log_signal.emit("[INFO] 完成YOLO-VDS模型加载")
 
         self.log_signal.emit("[INFO] 开始初始化TCP通信")
         client = TCPClient('192.168.137.238', 9000)
@@ -46,6 +46,8 @@ class MainWindow(QMainWindow):
         self.target_xyzRxyz = []     # 相机坐标系下的xyzRxyz 一维列表
         self.target_robot = []       # 机械臂坐标系下的目标坐标
         self.target_rotation = [-87.63, -0.71, 5.77] # 末端固定位姿 rx ry rz
+        self.tool_length = 100       # # 夹具长度
+
 
         super().__init__()
         uic.loadUi("ui/main.ui", self)  # 动态加载ui文件
@@ -55,18 +57,21 @@ class MainWindow(QMainWindow):
         self.client = None
         self.kinematics_solution = None
 
+        self.textBrowser.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
+
         # 连接按钮的点击事件处理函数
-        self.pushButton.clicked.connect(self.quit_app)
-        self.pushButton_2.clicked.connect(lambda: self.data_handing(1))     # 发送[1]查询变换, 计算关节解
-        self.pushButton_3.clicked.connect(lambda: self.data_handing(2))     # 查询相机中目标坐标
+        self.pushButton.clicked.connect(self.start_sys)
+        self.pushButton_2.clicked.connect(self.quit_app)
+        self.pushButton_3.clicked.connect(lambda: self.data_handing(2)) 
         self.pushButton_4.clicked.connect(lambda: self.data_handing(3))     # 回到零点
-        self.pushButton_5.clicked.connect(lambda: self.data_handing(4))     # 发送相机中目标坐标
-        self.pushButton_9.clicked.connect(lambda: self.data_handing(5))     # 获取变换并计算逆运动学解
+        self.pushButton_5.clicked.connect(lambda: self.data_handing(4))     # 发送相机中目标坐标到服务器
+        self.pushButton_6.clicked.connect(lambda: self.data_handing(5))     # 发送相机中目标坐标
+        self.pushButton_7.clicked.connect(lambda: self.data_handing(6))     # 到起始位姿
+        self.pushButton_10.clicked.connect(lambda: self.data_handing(7))    # 自动抓取
 
-        self.pushButton_6.clicked.connect(lambda: self.send_data())     # 发送消息
-        self.pushButton_7.clicked.connect(lambda: self.start_sys())     # 启动系统
         self.pushButton_8.clicked.connect(lambda: self.clear_log())     # 清除日志
-
+        self.pushButton_9.clicked.connect(lambda: self.send_data())     # 发送消息
+        # 收到数据:获取到机械臂角度:[91.05，84.28,-108.28，23.73，2.46，-1.23]
     def clear_log(self):
         self.textBrowser.clear()  # 清除之前的日志信息
 
@@ -193,8 +198,59 @@ class MainWindow(QMainWindow):
                     self.append_log_msg("[INFO] 有效的关节角度解:")
                     for i, solution in enumerate(IS_results):
                         formatted_solution = np.round(solution, 2)        # 保留两位小数
-                        self.append_log_msg(f"解 {i+1}:", formatted_solution.tolist())  # 转换为列表并打印
+                        self.append_log_msg(f"解 {i+1}:{formatted_solution.tolist()}" )   # 转换为列表并打印
 
+            elif data == 6:
+                self.append_log_msg("[INFO] 机械臂到起始位姿")
+                self.append_log_msg(self.client.send_message("[6, 20, 91.05, 84.28, -108.28, 23.73, 2.46, -1.23, 9]"))
+            
+            elif data == 7:
+                self.append_log_msg("[INFO] 自动抓取...")
+                # 要抓取的目标xyz
+                self.target_xyz = self.camera_xyz[0]
+                # 计算目标坐标，合并为要发送的相机坐标系下的目标坐标
+                if self.target_xyz:
+                    # 相机坐标系下的目标坐标xyz rx ry rz  
+                    self.target_xyzRxyz = self.target_xyz + self.target_rotation
+                self.client.send_message(str(self.target_xyzRxyz)) # 发送目标坐标信息到服务器
+                self.client.send_message("[1]") # 发送查询指令到服务器
+                recive_data = self.client.receive_message()  # 接收到的数据
+                # 解析接收到的joint1和target的变换数据  xyz xyzw
+                par_data = parse_data(recive_data)
+                if par_data is None:
+                    print("解析失败，无法处理数据")
+                if len(par_data) < 3:
+                    print("数据长度不足，无法提取前三个坐标值")
+                # 提取前三位数据 平移量
+                xyz_data_m = par_data[:3] 
+                xyz_data_mm = [round(coord * 1000, 2) for coord in xyz_data_m]
+
+                # z减去夹据具的长度
+                if  xyz_data_mm[-1] > self.tool_length:
+                    xyz_data_mm[-1] = xyz_data_mm[-1] - self.tool_length 
+                else:
+                    xyz_data_mm[-1] = 0
+                 # 合并为新的列表
+                target_list = xyz_data_mm + self.target_rotation
+                print(f"转换后的[x,y,z,rx,ry,rz]列表为：{target_list}")
+                # 计算逆运动学解
+                IS_results = self.kinematics_solution.inverse_kinematics(target_list)    # 逆运动学解
+                if IS_results:
+                    print("有效的关节角度解:")
+                    for i, solution in enumerate(IS_results):
+                        formatted_solution = np.round(solution, 2)        # 保留两位小数
+                        solution_list = formatted_solution.tolist()  # 转换为列表
+                        print(f"解 {i+1}:", formatted_solution.tolist())  # 转换为列表并打印  
+
+                    send_list = [6, 30] + solution_list + [9]
+                    # 将列表转换成字符串
+                    solution_str = str(send_list)
+                    angle_data = f"{solution_str}"
+                    self.append_log_msg(f"发送的关节角度列表为：{angle_data}")
+                    self.client.send_message(angle_data) # 发送关节角度信息到服务器，控制机械臂移动到指定点
+                    time.sleep(1) # 等待移动到指定点
+                    # self.client.send_message("[6,100,15,9]") # 关闭夹爪
+                
         except Exception as e:
             self.append_log_msg(f"[ERROR] data_handing()发生异常: {e}")
 
@@ -250,7 +306,6 @@ class MainWindow(QMainWindow):
         self.label.setAlignment(Qt.AlignCenter)
         self.label.setPixmap(scaled_pixmap)
 
-    
 
 if __name__ == "__main__":
 

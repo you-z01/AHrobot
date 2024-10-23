@@ -4,6 +4,8 @@ import json
 
 
 class TCPClient:
+    """基于socket建立TCP通信的客户端类"""
+
     def __init__(self, server_ip, server_port):
         """初始化客户端并设置服务器 IP 和端口"""
         self.server_ip = server_ip
@@ -26,7 +28,7 @@ class TCPClient:
             try:
                 message = data.encode('utf-8')  # 转换为字节格式
                 self.client_socket.sendall(message)
-                print(f"已发送数据: {data}")
+                # print(f"已发送数据: {data}")
             except Exception as e:
                 print(f"发送数据时发生错误: {e}")
         else:
@@ -89,7 +91,6 @@ def parse_data(data_str):
     # 如果所有尝试都失败，返回None并提示错误
     print(f"无法解析数据：{data_str}")
     return None
-
 
 
 # 示例用法

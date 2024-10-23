@@ -3,7 +3,7 @@
 **由myCobot 280 Jetson Nano完成自动收获**
 
 
-### 1.Environment：
+### 1. 环境
 
 1. 可以运行YOLOv5的python环境
 
@@ -37,7 +37,7 @@ cd <your-path>/pymycobot
 - **ubuntu20.04**  python 3.6 Pytorch 1.7.1+GPU CUDA 10.2 
 
 
-### 2.Camera config：
+4. 相机配置
 
 分辨率只能改特定的参数(可在SDK中查看)，d435i可以用 1280x720, 640x480, 848x480。
 
@@ -46,7 +46,7 @@ config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
 ```
 
-### 3.code return xyz：
+5. code return xyz：
 下方代码实现从像素坐标系到相机坐标系转换，并且标注中心点以及三维坐标信息。
 ```python
 for i in range(len(xyxy_list)):
@@ -63,3 +63,10 @@ for i in range(len(xyxy_list)):
     camera_xyz_list.append(camera_xyz)
     #print(camera_xyz_list)
 ```
+
+### 2. 更新说明
+1. 2024/10/23
+- 完成了客户端与机械臂端基于Socket建立的TCP通信
+- 基于pyqt5搭建了客户端监控界面
+- 通信数据起始位为'6', 结束位为'9', 中间为数据位
+

@@ -6,7 +6,8 @@ input_size: 640
 # 类别个数
 class_num:  2
 # 标签名称
-class_name: ['ripe', 'unripe']
+# class_name: ['ripe', 'unripe']
+class_name: ['red', 'unripe']
 # 阈值设置
 threshold:
   iou: 0.45
